@@ -2,7 +2,7 @@ Concentric Circles Flutter App
 Um aplicativo Flutter demonstrando uma interface de usuário inovadora com círculos concêntricos interativos que se reorganizam dinamicamente.
 
 📸 Screenshots
-<div align="center"> <img src="screenshots/main_view.jpeg" width="30%" alt="Visão principal dos círculos"> <img src="screenshots/detail_view.jpeg" width="30%" alt="Detalhe de um círculo"> </div>
+<div align="center"> <img src="screenshots/image-1.jpeg" width="30%" alt="Visão principal dos círculos"> <img src="screenshots/image-2.jpeg" width="30%" alt="Detalhe de um círculo"> </div>
 
 📱 Sobre o Projeto
 Este projeto exemplifica técnicas avançadas de UI/UX no Flutter, apresentando uma visualização única de círculos concêntricos que:
