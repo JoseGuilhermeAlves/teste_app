@@ -12,8 +12,11 @@ class CirclesPage extends StatefulWidget {
   State<CirclesPage> createState() => _CirclesPageState();
 }
 
-class _CirclesPageState extends State<CirclesPage> {
-  final ScrollController _scrollController = ScrollController();
+class _CirclesPageState extends State<CirclesPage>
+    with TickerProviderStateMixin {
+  late PageController _pageController;
+  late AnimationController _animationController;
+
   final List<CircleModel> circles = [
     CircleModel(label: "Círculo 1", radius: 100, avatarCount: 5),
     CircleModel(label: "Círculo 2", radius: 150, avatarCount: 8),
@@ -21,33 +24,30 @@ class _CirclesPageState extends State<CirclesPage> {
   ];
 
   int? selectedCircleIndex;
-  double scrollOffset = 0;
+  int currentFocusedIndex = 0;
+  double pageValue = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _pageController = PageController(viewportFraction: 1.0);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _pageController.addListener(() {
+      setState(() {
+        pageValue = _pageController.page ?? 0.0;
+      });
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    _pageController.dispose();
+    _animationController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    setState(() {
-      scrollOffset = _scrollController.offset;
-    });
-  }
-
-  double _calculateScale(int index) {
-    double maxOffset = 300.0;
-    double progress = (scrollOffset / maxOffset).clamp(0.0, 1.0);
-    double baseScale = 1.0 - (progress * 0.5);
-    double indexFactor = index / circles.length;
-    return baseScale - (indexFactor * progress * 0.3);
   }
 
   @override
@@ -58,8 +58,6 @@ class _CirclesPageState extends State<CirclesPage> {
         onBack: () => setState(() => selectedCircleIndex = null),
       );
     }
-
-    final biggest = circles.last.radius * 2;
 
     return Column(
       children: [
@@ -88,9 +86,9 @@ class _CirclesPageState extends State<CirclesPage> {
                 onPressed: () {
                   setState(() {
                     circles.add(CircleModel(
-                      label: "Novo ${circles.length + 1}",
-                      radius: circles.last.radius + 70,
-                      avatarCount: 6,
+                      label: "Círculo ${circles.length + 1}",
+                      radius: 100 + (circles.length * 50).toDouble(),
+                      avatarCount: 5 + circles.length * 2,
                     ));
                   });
                 },
@@ -104,30 +102,118 @@ class _CirclesPageState extends State<CirclesPage> {
           ),
         ),
         Expanded(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: SizedBox(
-              height: biggest + 300,
-              child: Stack(
-                alignment: Alignment.topCenter,
-                clipBehavior: Clip.none,
-                children: [
-                  for (int i = 0; i < circles.length; i++)
-                    Positioned(
-                      top: 50,
-                      child: Transform.scale(
-                        scale: _calculateScale(i),
-                        child: CircleWidget(
-                          circle: circles[i],
-                          index: i,
-                          scale: _calculateScale(i),
-                          onTap: () => setState(() => selectedCircleIndex = i),
+          child: PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            itemCount: circles.length,
+            onPageChanged: (index) {
+              setState(() {
+                currentFocusedIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Center(
+                child: AnimatedBuilder(
+                  animation: _pageController,
+                  builder: (context, child) {
+                    double value = 0.0;
+                    if (_pageController.position.haveDimensions) {
+                      value = index - (pageValue);
+                      value = (1 - (value.abs() * 0.5)).clamp(0.0, 1.0);
+                    } else {
+                      value = index == 0 ? 1.0 : 0.5;
+                    }
+
+                    return Transform.scale(
+                      scale: value,
+                      child: Opacity(
+                        opacity: value.clamp(0.3, 1.0),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Círculos anteriores (menores)
+                            for (int i = 0; i < index; i++)
+                              if ((index - i) <=
+                                  2) // Mostrar apenas os 2 anteriores
+                                Opacity(
+                                  opacity: 0.3,
+                                  child: Container(
+                                    width: circles[i].radius * 2,
+                                    height: circles[i].radius * 2,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                            // Círculo atual
+                            GestureDetector(
+                              onTap: index == currentFocusedIndex
+                                  ? () => setState(
+                                      () => selectedCircleIndex = index)
+                                  : null,
+                              child: CircleWidget(
+                                circle: circles[index],
+                                index: index,
+                                isFocused: index == currentFocusedIndex,
+                                scale: value,
+                                onTap: () =>
+                                    setState(() => selectedCircleIndex = index),
+                              ),
+                            ),
+
+                            // Círculos posteriores (maiores)
+                            for (int i = index + 1; i < circles.length; i++)
+                              if ((i - index) <=
+                                  2) // Mostrar apenas os 2 próximos
+                                IgnorePointer(
+                                  child: Opacity(
+                                    opacity: 0.1,
+                                    child: Container(
+                                      width: circles[i].radius * 2,
+                                      height: circles[i].radius * 2,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.1),
+                                          width: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ],
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        // Indicador de página
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: circles.asMap().entries.map((entry) {
+              return Container(
+                width: 8.0,
+                height: 8.0,
+                margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: currentFocusedIndex == entry.key
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.3),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],

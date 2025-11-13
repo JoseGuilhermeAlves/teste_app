@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
-const Color kBackground = Color(0xFF000000);
-const Color kButtonBackground = Color(0xFF424242);
-const Color kButtonTextColor = Color(0xFFE0E0E0);
+// Background colors
+const Color kBackground = Color(0xFF0A0E27);
+const Color kButtonBackground = Color(0xFF1A2138);
 
-final Gradient blueGradient = LinearGradient(
-  colors: [Colors.lightBlueAccent, Colors.blueAccent],
+// Text colors
+const Color kButtonTextColor = Color(0xFFE0E6FF);
+
+// Gradients
+const LinearGradient blueGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
+  colors: [
+    Color(0xFF3B82F6),
+    Color(0xFF1E40AF),
+  ],
 );
+
+// Circle colors
+const Color kCircleBorder = Color(0xFF3B82F6);
+const Color kCircleFocusedBorder = Color(0xFF60A5FA);
+const Color kCircleInactiveBorder = Color(0x4D3B82F6);
