@@ -1,6 +1,6 @@
 {
-    "name": "voalis_teste",
-    "short_name": "voalis_teste",
+    "name": "cluster_visualizer",
+    "short_name": "cluster_visualizer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

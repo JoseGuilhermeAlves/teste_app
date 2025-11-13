@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/core/constants/colors.dart';
-import 'package:voalis_teste/data/models/cluster_model.dart';
-import 'package:voalis_teste/data/repositories/cluster_repository.dart';
-import 'package:voalis_teste/presentation/widgets/cluster_detail_page.dart';
+import 'package:cluster_visualizer/core/constants/colors.dart';
+import 'package:cluster_visualizer/data/models/cluster_model.dart';
+import 'package:cluster_visualizer/data/repositories/cluster_repository.dart';
+import 'package:cluster_visualizer/presentation/widgets/cluster_detail_page.dart';
 import 'package:intl/intl.dart';
 
 class TimelineClusterView extends StatefulWidget {

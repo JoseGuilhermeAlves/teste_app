@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/core/constants/colors.dart';
-import 'package:voalis_teste/data/models/cluster_model.dart';
+import 'package:cluster_visualizer/core/constants/colors.dart';
+import 'package:cluster_visualizer/data/models/cluster_model.dart';
 import 'package:intl/intl.dart';
 
 class ClusterDetailPage extends StatefulWidget {

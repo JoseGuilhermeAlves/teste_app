@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/core/constants/colors.dart';
-import 'package:voalis_teste/presentation/cronologica/network_graph_view.dart';
-import 'package:voalis_teste/presentation/pages/concentric_circles_view.dart';
-import 'package:voalis_teste/presentation/pages/grid_cluster_view.dart';
-import 'package:voalis_teste/presentation/pages/timeline_cluster_view.dart';
+import 'package:cluster_visualizer/core/constants/colors.dart';
+import 'package:cluster_visualizer/presentation/cronologica/network_graph_view.dart';
+import 'package:cluster_visualizer/presentation/pages/concentric_circles_view.dart';
+import 'package:cluster_visualizer/presentation/pages/grid_cluster_view.dart';
+import 'package:cluster_visualizer/presentation/pages/timeline_cluster_view.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

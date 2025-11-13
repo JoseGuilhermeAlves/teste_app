@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/data/models/cluster_model.dart';
+import 'package:cluster_visualizer/data/models/cluster_model.dart';
 
 class ClusterCircleWidget extends StatelessWidget {
   final ClusterModel cluster;

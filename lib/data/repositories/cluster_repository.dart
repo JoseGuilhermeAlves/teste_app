@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:voalis_teste/data/datasources/fake_clusters_data.dart';
-import 'package:voalis_teste/data/models/cluster_model.dart';
+import 'package:cluster_visualizer/data/datasources/fake_clusters_data.dart';
+import 'package:cluster_visualizer/data/models/cluster_model.dart';
 
 class ClusterRepository {
   List<ClusterModel>? _cachedClusters;

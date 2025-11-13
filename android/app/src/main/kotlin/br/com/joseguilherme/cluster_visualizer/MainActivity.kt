@@ -1,4 +1,4 @@
-package com.example.voalis_teste
+package br.com.joseguilherme.cluster_visualizer
 
 import io.flutter.embedding.android.FlutterActivity
 

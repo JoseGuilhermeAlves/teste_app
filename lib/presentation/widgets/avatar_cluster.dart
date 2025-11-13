@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/data/models/cluster_model.dart';
+import 'package:cluster_visualizer/data/models/cluster_model.dart';
 
 class AvatarCluster extends StatelessWidget {
   final ClusterModel circle;

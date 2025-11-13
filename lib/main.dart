@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/core/constants/colors.dart';
-import 'package:voalis_teste/presentation/pages/home_page.dart';
+import 'package:cluster_visualizer/core/constants/colors.dart';
+import 'package:cluster_visualizer/presentation/pages/home_page.dart';
 
 void main() {
   runApp(const MyApp());
