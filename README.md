@@ -1,87 +1,202 @@
-Concentric Circles Flutter App
-Um aplicativo Flutter demonstrando uma interface de usuário inovadora com círculos concêntricos interativos que se reorganizam dinamicamente.
+# 🎯 Cluster Visualizer - Multi-View Flutter App
 
-📸 Screenshots
-<div align="center"> <img src="screenshots/image-1.jpeg" width="30%" alt="Visão principal dos círculos"> <img src="screenshots/image-2.jpeg" width="30%" alt="Detalhe de um círculo"> </div>
+Uma aplicação Flutter profissional e moderna para visualização de clusters de membros com múltiplas perspectivas interativas.
 
-📱 Sobre o Projeto
-Este projeto exemplifica técnicas avançadas de UI/UX no Flutter, apresentando uma visualização única de círculos concêntricos que:
+## 📁 Estrutura do Projeto
 
-Se reorganizam conforme o scroll do usuário
-
-Interagem com toques para expandir e contrair
-
-Exibem avatares distribuídos harmonicamente em arcos
-
-Mudam de aparência com efeitos visuais baseados na posição de scroll
-
-🛠️ Tecnologias e Versões
-Flutter: 3.32.0
-
-Dart: 3.5.0
-
-Dispositivo alvo: iOS e Android
-
-✨ Funcionalidades Principais
-Visualização hierárquica de círculos concêntricos
-
-Efeitos de escala e transparência baseados em scroll
-
-Detalhamento de círculos individuais ao tocar
-
-Listagem de membros dentro de cada círculo
-
-Botões de ação para gerenciamento dos círculos
-
-Design com gradientes azuis e efeitos luminosos
-
-🎨 Design e UX
-O aplicativo implementa princípios de design modernos:
-
-Fundo escuro para melhor contraste
-
-Bordas com gradientes azuis para destaque
-
-Animações suaves de transição
-
-Layout responsivo que se adapta a diferentes tamanhos de tela
-
-Feedback visual claro para interações do usuário
-
-🚀 Como Executar
-Certifique-se de ter o Flutter 3.32.0 instalado:
-
-bash
-flutter --version
-Clone o repositório:
-
-bash
-git clone https://github.com/JoseGuilhermeAlves/teste_app.git
-Acesse o diretório do projeto:
-
-bash
-cd teste_app
-Instale as dependências:
-
-bash
-flutter pub get
-Execute o aplicativo:
-
-bash
-flutter run
-📁 Estrutura do Projeto
-text
+```
 lib/
-├── main.dart                 # Ponto de entrada do aplicativo
-├── concentric_circles.dart   # Implementação principal dos círculos
-└── ... (outros arquivos conforme evolução do projeto)
-🔧 Personalização
-Os aspectos visuais podem ser facilmente personalizados modificando:
+├── core/
+│   └── constants/
+│       └── colors.dart              # Cores da aplicação
+├── data/
+│   ├── datasources/
+│   │   └── fake_clusters_data.dart  # Dados JSON fake
+│   ├── models/
+│   │   └── cluster_model.dart       # Modelos de Cluster e Member
+│   └── repositories/
+│       └── cluster_repository.dart  # Repository pattern
+└── presentation/
+    ├── pages/
+    │   ├── home_page.dart                  # Menu principal
+    │   ├── concentric_circles_view.dart    # Visualização orbital
+    │   ├── grid_cluster_view.dart          # Visualização em grid
+    │   ├── timeline_cluster_view.dart      # Visualização cronológica
+    │   └── network_graph_view.dart         # Visualização em rede
+    └── widgets/
+        ├── cluster_circle_widget.dart      # Widget de círculo
+        └── cluster_detail_page.dart        # Detalhes do cluster
+```
 
-Cores e gradientes nas constantes do projeto
+## 🎨 Visualizações Disponíveis
 
-Tamanhos e quantidades de círculos
+### 1. **Concentric Circles** 🔵
+- Círculos concêntricos interativos
+- Transições fluidas entre clusters
+- Swipe vertical para navegar
+- Avatares dos membros na metade inferior
 
-Número de avatares exibidos
+### 2. **Grid View** 📊
+- Cards organizados em grade
+- Filtro por categoria
+- Animações de entrada
+- Preview de membros em stack
 
-Efeitos de animação e transição
+### 3. **Timeline** ⏱️
+- Visualização cronológica
+- Linha do tempo vertical
+- Ordenação por data de criação
+- Gradientes e animações suaves
+
+### 4. **Network Graph** 🕸️
+- Nós conectados em rede
+- Animação de conexões
+- Tamanho baseado em membros
+- Interação por toque
+
+## 🚀 Instalação
+
+### 1. Copie os arquivos para seu projeto
+
+```bash
+# Estrutura de diretórios
+lib/
+├── core/constants/colors.dart
+├── data/
+│   ├── datasources/fake_clusters_data.dart
+│   ├── models/cluster_model.dart
+│   └── repositories/cluster_repository.dart
+└── presentation/
+    ├── pages/
+    │   ├── home_page.dart
+    │   ├── concentric_circles_view.dart
+    │   ├── grid_cluster_view.dart
+    │   ├── timeline_cluster_view.dart
+    │   └── network_graph_view.dart
+    └── widgets/
+        ├── cluster_circle_widget.dart
+        └── cluster_detail_page.dart
+```
+
+### 2. Adicione a dependência do intl no pubspec.yaml
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  intl: ^0.18.0  # Para formatação de datas
+```
+
+### 3. Instale as dependências
+
+```bash
+flutter pub get
+```
+
+### 4. Execute o projeto
+
+```bash
+flutter run
+```
+
+## 📊 Dados Fake
+
+O projeto inclui 5 clusters pré-configurados:
+
+1. **Design Team** (8 membros) - 🎨 Vermelho
+2. **Engineering** (12 membros) - ⚙️ Turquesa
+3. **Marketing Squad** (6 membros) - 📢 Amarelo
+4. **Product Strategy** (5 membros) - 🎯 Verde
+5. **Customer Success** (10 membros) - 💬 Rosa
+
+Cada cluster contém:
+- Nome, descrição e categoria
+- Emoji e cor personalizada
+- Lista completa de membros com:
+  - Nome, role e avatar
+  - Status online/offline
+  - Data de entrada
+
+## 🎨 Customização
+
+### Adicionar novos clusters
+
+Edite `data/datasources/fake_clusters_data.dart`:
+
+```dart
+{
+  "id": "6",
+  "name": "Seu Cluster",
+  "description": "Descrição aqui",
+  "category": "Categoria",
+  "memberCount": 5,
+  "iconEmoji": "🚀",
+  "colorHex": "#FF5733",
+  "createdAt": "2024-03-01T10:00:00Z",
+  "members": [...]
+}
+```
+
+### Alterar cores
+
+Edite `core/constants/colors.dart`:
+
+```dart
+const Color kBackground = Color(0xFF0A0E27);
+const Color kButtonBackground = Color(0xFF1E2749);
+const Color kButtonTextColor = Colors.white;
+```
+
+## 🏗️ Arquitetura
+
+O projeto segue **Clean Architecture** com:
+
+- **Core**: Constantes e utilidades compartilhadas
+- **Data**: Modelos, datasources e repositories
+- **Presentation**: UI (pages e widgets)
+
+### Padrões Utilizados
+
+- ✅ Repository Pattern
+- ✅ Stateful Widgets com AnimationController
+- ✅ Hero Animations
+- ✅ Custom Painters
+- ✅ Gesture Detection
+- ✅ Responsive Design
+
+## 🎭 Animações
+
+Todas as visualizações incluem:
+
+- Animações de entrada (fade, slide, scale)
+- Transições suaves entre estados
+- Micro-interações
+- Feedback visual
+
+## 📱 Compatibilidade
+
+- ✅ Android
+- ✅ iOS
+- ✅ Web
+- ✅ Desktop (Windows, macOS, Linux)
+
+## 🔧 Próximos Passos
+
+Sugestões de melhorias:
+
+1. Adicionar busca e filtros avançados
+2. Implementar API real
+3. Adicionar testes unitários
+4. Criar animações personalizadas
+5. Adicionar modo escuro/claro
+6. Implementar favoritos
+7. Adicionar chat entre membros
+8. Exportar visualizações como imagem
+
+## 👨‍💻 Desenvolvido por
+
+José Guilherme Alves - Flutter Developer 
+
+---
+
+**Nota**: Este projeto foi desenvolvido como teste de UI/UX para visualização de clusters de membros. Todos os dados são fictícios.
