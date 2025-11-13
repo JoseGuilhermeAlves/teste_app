@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:voalis_teste/data/models/circle_model.dart';
 
@@ -90,53 +89,34 @@ class CircleWidget extends StatelessWidget {
     final avatarSize = size * 0.12;
     final spacing = size * 0.02;
 
-    // Calcular quantos avatares cabem por linha
-    final avatarsPerRow = (size / (avatarSize + spacing)).floor();
-    final rows = (circle.avatarCount / avatarsPerRow).ceil();
-
     return Padding(
       padding: EdgeInsets.all(size * 0.08),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: List.generate(rows, (rowIndex) {
-          final startIndex = rowIndex * avatarsPerRow;
-          final endIndex = min(startIndex + avatarsPerRow, circle.avatarCount);
-          final avatarsInRow = endIndex - startIndex;
-
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: spacing / 2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(avatarsInRow, (colIndex) {
-                final avatarIndex = startIndex + colIndex;
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: spacing / 2),
-                  child: Container(
-                    width: avatarSize,
-                    height: avatarSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 4,
-                        ),
-                      ],
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(
-                          'https://i.pravatar.cc/150?img=$avatarIndex',
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: spacing,
+        runSpacing: spacing,
+        children: List.generate(circle.avatarCount, (avatarIndex) {
+          return Container(
+            width: avatarSize,
+            height: avatarSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 4,
+                ),
+              ],
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(
+                  'https://i.pravatar.cc/150?img=$avatarIndex',
+                ),
+              ),
             ),
           );
         }),

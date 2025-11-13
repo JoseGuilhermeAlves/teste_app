@@ -219,17 +219,12 @@ class _CirclesPageState extends State<CirclesPage>
         startY = endY = 0;
         startOpacity = endOpacity = 1.0;
         isFocused = true;
-      } else if (relation == 1) {
-        // Próxima órbita
-        startSize = endSize = focusedSize * 1.4;
-        startY = endY = 0;
-        startOpacity = endOpacity = 0.5;
-        shouldShowContent = false;
       } else {
-        // Órbitas externas
-        startSize = endSize = focusedSize * (1.4 + ((relation - 1) * 0.4));
+        // TODAS as órbitas externas (1, 2, 3, ...)
+        final orbitLevel = relation;
+        startSize = endSize = focusedSize * (1.0 + (orbitLevel * 0.4));
         startY = endY = 0;
-        startOpacity = endOpacity = (0.3 / relation).clamp(0.1, 0.3);
+        startOpacity = endOpacity = (0.5 / orbitLevel).clamp(0.15, 0.5);
         shouldShowContent = false;
       }
     } else {
@@ -255,15 +250,16 @@ class _CirclesPageState extends State<CirclesPage>
         endY = 0;
         endOpacity = 1.0;
         shouldShowContent = true;
-      } else if (relation == 2) {
-        // Círculo que vai virar a próxima órbita
-        startSize = focusedSize * 1.8;
+      } else if (relation > 1) {
+        // Círculos que vão diminuir uma órbita (relation 2->1, 3->2, etc)
+        final orbitLevel = relation;
+        startSize = focusedSize * (1.0 + (orbitLevel * 0.4));
         startY = 0;
-        startOpacity = 0.2;
+        startOpacity = (0.5 / orbitLevel).clamp(0.15, 0.5);
 
-        endSize = focusedSize * 1.4;
+        endSize = focusedSize * (1.0 + ((orbitLevel - 1) * 0.4));
         endY = 0;
-        endOpacity = 0.5;
+        endOpacity = (0.5 / (orbitLevel - 1)).clamp(0.15, 0.5);
         shouldShowContent = false;
       } else if (relation < 0) {
         // Círculos pequenos que sobem mais
@@ -278,10 +274,10 @@ class _CirclesPageState extends State<CirclesPage>
         endY = -(focusedSize / 2) + (endSize / 2) + 40 + (distance * 15);
         endOpacity = 0.6;
       } else {
-        // Órbitas mais externas
-        startSize = endSize = focusedSize * (1.4 + ((relation - 1) * 0.4));
+        // Fallback
+        startSize = endSize = focusedSize;
         startY = endY = 0;
-        startOpacity = endOpacity = (0.3 / relation).clamp(0.1, 0.3);
+        startOpacity = endOpacity = 1.0;
         shouldShowContent = false;
       }
     }
