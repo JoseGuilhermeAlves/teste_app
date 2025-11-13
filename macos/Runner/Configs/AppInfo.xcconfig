@@ -8,7 +8,7 @@
 PRODUCT_NAME = cluster_visualizer
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = br.com.joseguilherme.voalisTeste
+PRODUCT_BUNDLE_IDENTIFIER = br.com.joseguilherme.clusterVisualizer
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 br.com.joseguilherme. All rights reserved.
