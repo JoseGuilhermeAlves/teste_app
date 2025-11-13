@@ -24,6 +24,7 @@ class _CirclesPageState extends State<CirclesPage>
   int? selectedCircleIndex;
   int currentFocusedIndex = 0;
   bool _isAnimating = false;
+  int _animationDirection = 1; // 1 = avançar, -1 = voltar
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _CirclesPageState extends State<CirclesPage>
 
     setState(() {
       _isAnimating = true;
+      _animationDirection = 1;
     });
 
     _transitionController.forward(from: 0.0).then((_) {
@@ -61,6 +63,7 @@ class _CirclesPageState extends State<CirclesPage>
 
     setState(() {
       _isAnimating = true;
+      _animationDirection = -1;
     });
 
     _transitionController.forward(from: 0.0).then((_) {
@@ -229,56 +232,112 @@ class _CirclesPageState extends State<CirclesPage>
       }
     } else {
       // Durante a animação
-      if (relation == 0) {
-        // Círculo que ESTÁ focado e vai DIMINUIR e SUBIR
-        startSize = focusedSize;
-        startY = 0;
-        startOpacity = 1.0;
+      if (_animationDirection == 1) {
+        // AVANÇANDO (para o próximo círculo)
+        if (relation == 0) {
+          // Círculo que ESTÁ focado e vai DIMINUIR e SUBIR
+          startSize = focusedSize;
+          startY = 0;
+          startOpacity = 1.0;
 
-        final smallSize = focusedSize * 0.22;
-        endSize = smallSize;
-        endY = -(focusedSize / 2) + (smallSize / 2) + 40;
-        endOpacity = 0.6;
-        isFocused = true;
-      } else if (relation == 1) {
-        // Próximo círculo que vai ENCOLHER e vir pro CENTRO
-        startSize = focusedSize * 1.4;
-        startY = 0;
-        startOpacity = 0.5;
+          final smallSize = focusedSize * 0.22;
+          endSize = smallSize;
+          endY = -(focusedSize / 2) + (smallSize / 2) + 40;
+          endOpacity = 0.6;
+          isFocused = true;
+        } else if (relation == 1) {
+          // Próximo círculo que vai ENCOLHER e vir pro CENTRO
+          startSize = focusedSize * 1.4;
+          startY = 0;
+          startOpacity = 0.5;
 
-        endSize = focusedSize;
-        endY = 0;
-        endOpacity = 1.0;
-        shouldShowContent = true;
-      } else if (relation > 1) {
-        // Círculos que vão diminuir uma órbita (relation 2->1, 3->2, etc)
-        final orbitLevel = relation;
-        startSize = focusedSize * (1.0 + (orbitLevel * 0.4));
-        startY = 0;
-        startOpacity = (0.5 / orbitLevel).clamp(0.15, 0.5);
+          endSize = focusedSize;
+          endY = 0;
+          endOpacity = 1.0;
+          shouldShowContent = true;
+        } else if (relation > 1) {
+          // Círculos que vão diminuir uma órbita
+          final orbitLevel = relation;
+          startSize = focusedSize * (1.0 + (orbitLevel * 0.4));
+          startY = 0;
+          startOpacity = (0.5 / orbitLevel).clamp(0.15, 0.5);
 
-        endSize = focusedSize * (1.0 + ((orbitLevel - 1) * 0.4));
-        endY = 0;
-        endOpacity = (0.5 / (orbitLevel - 1)).clamp(0.15, 0.5);
-        shouldShowContent = false;
-      } else if (relation < 0) {
-        // Círculos pequenos que sobem mais
-        final distance = relation.abs();
-        startSize =
-            focusedSize * (0.22 - ((distance - 1) * 0.03)).clamp(0.15, 0.22);
-        startY =
-            -(focusedSize / 2) + (startSize / 2) + 40 + ((distance - 1) * 15);
-        startOpacity = 0.6;
+          endSize = focusedSize * (1.0 + ((orbitLevel - 1) * 0.4));
+          endY = 0;
+          endOpacity = (0.5 / (orbitLevel - 1)).clamp(0.15, 0.5);
+          shouldShowContent = false;
+        } else if (relation < 0) {
+          // Círculos pequenos que sobem mais
+          final distance = relation.abs();
+          startSize =
+              focusedSize * (0.22 - ((distance - 1) * 0.03)).clamp(0.15, 0.22);
+          startY =
+              -(focusedSize / 2) + (startSize / 2) + 40 + ((distance - 1) * 15);
+          startOpacity = 0.6;
 
-        endSize = focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
-        endY = -(focusedSize / 2) + (endSize / 2) + 40 + (distance * 15);
-        endOpacity = 0.6;
+          endSize = focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
+          endY = -(focusedSize / 2) + (endSize / 2) + 40 + (distance * 15);
+          endOpacity = 0.6;
+        } else {
+          startSize = endSize = focusedSize;
+          startY = endY = 0;
+          startOpacity = endOpacity = 1.0;
+          shouldShowContent = false;
+        }
       } else {
-        // Fallback
-        startSize = endSize = focusedSize;
-        startY = endY = 0;
-        startOpacity = endOpacity = 1.0;
-        shouldShowContent = false;
+        // VOLTANDO (para o círculo anterior)
+        if (relation == 0) {
+          // Círculo que ESTÁ focado e vai CRESCER e vir de uma ÓRBITA EXTERNA
+          startSize = focusedSize;
+          startY = 0;
+          startOpacity = 1.0;
+
+          endSize = focusedSize * 1.4;
+          endY = 0;
+          endOpacity = 0.5;
+          isFocused = true;
+          shouldShowContent = false; // Vai perder conteúdo ao virar órbita
+        } else if (relation == -1) {
+          // Círculo pequeno no topo que vai CRESCER e vir pro CENTRO
+          final smallSize = focusedSize * 0.22;
+          startSize = smallSize;
+          startY = -(focusedSize / 2) + (smallSize / 2) + 40;
+          startOpacity = 0.6;
+
+          endSize = focusedSize;
+          endY = 0;
+          endOpacity = 1.0;
+          shouldShowContent = true;
+        } else if (relation < -1) {
+          // Círculos pequenos que descem
+          final distance = relation.abs();
+          startSize =
+              focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
+          startY = -(focusedSize / 2) + (startSize / 2) + 40 + (distance * 15);
+          startOpacity = 0.6;
+
+          endSize =
+              focusedSize * (0.22 - ((distance - 1) * 0.03)).clamp(0.15, 0.22);
+          endY =
+              -(focusedSize / 2) + (endSize / 2) + 40 + ((distance - 1) * 15);
+          endOpacity = 0.6;
+        } else if (relation > 0) {
+          // Órbitas externas que aumentam
+          final orbitLevel = relation;
+          startSize = focusedSize * (1.0 + ((orbitLevel - 1) * 0.4));
+          startY = 0;
+          startOpacity = (0.5 / (orbitLevel - 1)).clamp(0.15, 0.5);
+
+          endSize = focusedSize * (1.0 + (orbitLevel * 0.4));
+          endY = 0;
+          endOpacity = (0.5 / orbitLevel).clamp(0.15, 0.5);
+          shouldShowContent = false;
+        } else {
+          startSize = endSize = focusedSize;
+          startY = endY = 0;
+          startOpacity = endOpacity = 1.0;
+          shouldShowContent = false;
+        }
       }
     }
 
