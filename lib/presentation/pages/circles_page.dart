@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:voalis_teste/core/constants/colors.dart';
-
 import 'package:voalis_teste/data/models/circle_model.dart';
 import 'package:voalis_teste/presentation/widgets/circle_detail_page.dart';
 import 'package:voalis_teste/presentation/widgets/circle_widget.dart';
@@ -14,40 +13,63 @@ class CirclesPage extends StatefulWidget {
 
 class _CirclesPageState extends State<CirclesPage>
     with TickerProviderStateMixin {
-  late PageController _pageController;
-  late AnimationController _animationController;
+  late AnimationController _transitionController;
 
   final List<CircleModel> circles = [
-    CircleModel(label: "Círculo 1", radius: 100, avatarCount: 5),
+    CircleModel(label: "Círculo 1", radius: 150, avatarCount: 5),
     CircleModel(label: "Círculo 2", radius: 150, avatarCount: 8),
-    CircleModel(label: "Círculo 3", radius: 220, avatarCount: 12),
+    CircleModel(label: "Círculo 3", radius: 150, avatarCount: 12),
   ];
 
   int? selectedCircleIndex;
   int currentFocusedIndex = 0;
-  double pageValue = 0.0;
+  bool _isAnimating = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 1.0);
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+    _transitionController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
-    _pageController.addListener(() {
-      setState(() {
-        pageValue = _pageController.page ?? 0.0;
-      });
-    });
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _animationController.dispose();
+    _transitionController.dispose();
     super.dispose();
+  }
+
+  void _goToNext() {
+    if (_isAnimating || currentFocusedIndex >= circles.length - 1) return;
+
+    setState(() {
+      _isAnimating = true;
+    });
+
+    _transitionController.forward(from: 0.0).then((_) {
+      setState(() {
+        currentFocusedIndex++;
+        _isAnimating = false;
+      });
+      _transitionController.value = 0.0;
+    });
+  }
+
+  void _goToPrevious() {
+    if (_isAnimating || currentFocusedIndex <= 0) return;
+
+    setState(() {
+      _isAnimating = true;
+    });
+
+    _transitionController.forward(from: 0.0).then((_) {
+      setState(() {
+        currentFocusedIndex--;
+        _isAnimating = false;
+      });
+      _transitionController.value = 0.0;
+    });
   }
 
   @override
@@ -59,164 +81,248 @@ class _CirclesPageState extends State<CirclesPage>
       );
     }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                icon: Icon(Icons.add_circle, color: kButtonTextColor, size: 20),
-                label: Text("Edit Circle",
-                    style: TextStyle(color: kButtonTextColor)),
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kButtonBackground,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+    final screenSize = MediaQuery.of(context).size;
+    final focusedCircleSize = screenSize.width * 0.85;
+
+    return GestureDetector(
+      onVerticalDragEnd: (details) {
+        if (details.primaryVelocity! < -500) {
+          _goToNext();
+        } else if (details.primaryVelocity! > 500) {
+          _goToPrevious();
+        }
+      },
+      child: Column(
+        children: [
+          // Botões superiores
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  icon: Icon(Icons.edit, color: kButtonTextColor, size: 20),
+                  label: Text("Edit Circle",
+                      style: TextStyle(color: kButtonTextColor)),
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kButtonBackground,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                icon:
-                    Icon(Icons.bubble_chart, color: kButtonTextColor, size: 20),
-                label: Text("More Circles",
-                    style: TextStyle(color: kButtonTextColor)),
-                onPressed: () {
-                  setState(() {
-                    circles.add(CircleModel(
-                      label: "Círculo ${circles.length + 1}",
-                      radius: 100 + (circles.length * 50).toDouble(),
-                      avatarCount: 5 + circles.length * 2,
-                    ));
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kButtonBackground,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: circles.length,
-            onPageChanged: (index) {
-              setState(() {
-                currentFocusedIndex = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              return Center(
-                child: AnimatedBuilder(
-                  animation: _pageController,
-                  builder: (context, child) {
-                    double value = 0.0;
-                    if (_pageController.position.haveDimensions) {
-                      value = index - (pageValue);
-                      value = (1 - (value.abs() * 0.5)).clamp(0.0, 1.0);
-                    } else {
-                      value = index == 0 ? 1.0 : 0.5;
-                    }
-
-                    return Transform.scale(
-                      scale: value,
-                      child: Opacity(
-                        opacity: value.clamp(0.3, 1.0),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Círculos anteriores (menores)
-                            for (int i = 0; i < index; i++)
-                              if ((index - i) <=
-                                  2) // Mostrar apenas os 2 anteriores
-                                Opacity(
-                                  opacity: 0.3,
-                                  child: Container(
-                                    width: circles[i].radius * 2,
-                                    height: circles[i].radius * 2,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.2),
-                                        width: 1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                            // Círculo atual
-                            GestureDetector(
-                              onTap: index == currentFocusedIndex
-                                  ? () => setState(
-                                      () => selectedCircleIndex = index)
-                                  : null,
-                              child: CircleWidget(
-                                circle: circles[index],
-                                index: index,
-                                isFocused: index == currentFocusedIndex,
-                                scale: value,
-                                onTap: () =>
-                                    setState(() => selectedCircleIndex = index),
-                              ),
-                            ),
-
-                            // Círculos posteriores (maiores)
-                            for (int i = index + 1; i < circles.length; i++)
-                              if ((i - index) <=
-                                  2) // Mostrar apenas os 2 próximos
-                                IgnorePointer(
-                                  child: Opacity(
-                                    opacity: 0.1,
-                                    child: Container(
-                                      width: circles[i].radius * 2,
-                                      height: circles[i].radius * 2,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.1),
-                                          width: 1,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          ],
-                        ),
-                      ),
-                    );
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  icon:
+                      Icon(Icons.add_circle, color: kButtonTextColor, size: 20),
+                  label: Text("Add Circle",
+                      style: TextStyle(color: kButtonTextColor)),
+                  onPressed: () {
+                    setState(() {
+                      circles.add(CircleModel(
+                        label: "Círculo ${circles.length + 1}",
+                        radius: 150,
+                        avatarCount: 5 + circles.length * 2,
+                      ));
+                    });
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kButtonBackground,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
-        ),
-        // Indicador de página
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: circles.asMap().entries.map((entry) {
-              return Container(
-                width: 8.0,
-                height: 8.0,
-                margin: const EdgeInsets.symmetric(horizontal: 4.0),
+
+          // Área dos círculos com transição FLUIDA
+          Expanded(
+            child: AnimatedBuilder(
+              animation: _transitionController,
+              builder: (context, child) {
+                return Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      ...List.generate(circles.length, (index) {
+                        return _buildAnimatedCircle(
+                          index,
+                          focusedCircleSize,
+                          _transitionController.value,
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Indicador de página
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: circles.asMap().entries.map((entry) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: currentFocusedIndex == entry.key ? 24.0 : 8.0,
+                  height: 8.0,
+                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: currentFocusedIndex == entry.key
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.3),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedCircle(int index, double focusedSize, double progress) {
+    final t = Curves.easeInOutCubic.transform(progress);
+    final relation = index - currentFocusedIndex;
+
+    // Posições e tamanhos INICIAIS (antes da animação)
+    double startSize;
+    double startY;
+    double startOpacity;
+
+    // Posições e tamanhos FINAIS (depois da animação)
+    double endSize;
+    double endY;
+    double endOpacity;
+
+    bool isFocused = false;
+    bool shouldShowContent = true;
+
+    if (!_isAnimating) {
+      // Estado estável (sem animação)
+      if (relation < 0) {
+        // Círculos que já passaram - pequenos no topo
+        final distance = relation.abs();
+        startSize = endSize =
+            focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
+        startY =
+            endY = -(focusedSize / 2) + (startSize / 2) + 40 + (distance * 15);
+        startOpacity = endOpacity = 0.6;
+      } else if (relation == 0) {
+        // Círculo focado
+        startSize = endSize = focusedSize;
+        startY = endY = 0;
+        startOpacity = endOpacity = 1.0;
+        isFocused = true;
+      } else if (relation == 1) {
+        // Próxima órbita
+        startSize = endSize = focusedSize * 1.4;
+        startY = endY = 0;
+        startOpacity = endOpacity = 0.5;
+        shouldShowContent = false;
+      } else {
+        // Órbitas externas
+        startSize = endSize = focusedSize * (1.4 + ((relation - 1) * 0.4));
+        startY = endY = 0;
+        startOpacity = endOpacity = (0.3 / relation).clamp(0.1, 0.3);
+        shouldShowContent = false;
+      }
+    } else {
+      // Durante a animação
+      if (relation == 0) {
+        // Círculo que ESTÁ focado e vai DIMINUIR e SUBIR
+        startSize = focusedSize;
+        startY = 0;
+        startOpacity = 1.0;
+
+        final smallSize = focusedSize * 0.22;
+        endSize = smallSize;
+        endY = -(focusedSize / 2) + (smallSize / 2) + 40;
+        endOpacity = 0.6;
+        isFocused = true;
+      } else if (relation == 1) {
+        // Próximo círculo que vai ENCOLHER e vir pro CENTRO
+        startSize = focusedSize * 1.4;
+        startY = 0;
+        startOpacity = 0.5;
+
+        endSize = focusedSize;
+        endY = 0;
+        endOpacity = 1.0;
+        shouldShowContent = true;
+      } else if (relation == 2) {
+        // Círculo que vai virar a próxima órbita
+        startSize = focusedSize * 1.8;
+        startY = 0;
+        startOpacity = 0.2;
+
+        endSize = focusedSize * 1.4;
+        endY = 0;
+        endOpacity = 0.5;
+        shouldShowContent = false;
+      } else if (relation < 0) {
+        // Círculos pequenos que sobem mais
+        final distance = relation.abs();
+        startSize =
+            focusedSize * (0.22 - ((distance - 1) * 0.03)).clamp(0.15, 0.22);
+        startY =
+            -(focusedSize / 2) + (startSize / 2) + 40 + ((distance - 1) * 15);
+        startOpacity = 0.6;
+
+        endSize = focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
+        endY = -(focusedSize / 2) + (endSize / 2) + 40 + (distance * 15);
+        endOpacity = 0.6;
+      } else {
+        // Órbitas mais externas
+        startSize = endSize = focusedSize * (1.4 + ((relation - 1) * 0.4));
+        startY = endY = 0;
+        startOpacity = endOpacity = (0.3 / relation).clamp(0.1, 0.3);
+        shouldShowContent = false;
+      }
+    }
+
+    // Interpolar valores durante a animação
+    final currentSize = startSize + ((endSize - startSize) * t);
+    final currentY = startY + ((endY - startY) * t);
+    final currentOpacity = startOpacity + ((endOpacity - startOpacity) * t);
+
+    return Positioned(
+      left: (MediaQuery.of(context).size.width / 2) - (currentSize / 2),
+      top: (MediaQuery.of(context).size.height / 2) -
+          (currentSize / 2) +
+          currentY -
+          80,
+      child: Opacity(
+        opacity: currentOpacity,
+        child: shouldShowContent
+            ? CircleWidget(
+                circle: circles[index],
+                index: index,
+                isFocused: isFocused,
+                onTap: () {
+                  if (isFocused && !_isAnimating) {
+                    setState(() => selectedCircleIndex = index);
+                  }
+                },
+                size: currentSize,
+              )
+            : Container(
+                width: currentSize,
+                height: currentSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: currentFocusedIndex == entry.key
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.3),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(currentOpacity),
+                    width: 2,
+                  ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+              ),
+      ),
     );
   }
 }

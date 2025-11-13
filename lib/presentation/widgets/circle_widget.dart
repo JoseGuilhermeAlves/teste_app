@@ -1,39 +1,36 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:voalis_teste/data/models/circle_model.dart';
-import 'package:voalis_teste/core/constants/colors.dart';
-import 'avatar_cluster.dart';
 
 class CircleWidget extends StatelessWidget {
   final CircleModel circle;
   final int index;
-  final double scale;
   final bool isFocused;
   final VoidCallback onTap;
+  final double size;
 
   const CircleWidget({
     super.key,
     required this.circle,
     required this.index,
-    required this.scale,
+    required this.isFocused,
     required this.onTap,
-    this.isFocused = false,
+    this.size = 300,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: isFocused ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: circle.radius * 2,
-        height: circle.radius * 2,
+      child: Container(
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
+          // FUNDO TRANSPARENTE - apenas a borda
           border: Border.all(
-            color: isFocused
-                ? Colors.blueAccent.withOpacity(0.8)
-                : Colors.white.withOpacity(0.3),
-            width: isFocused ? 3 : 1.5,
+            color: Colors.white.withOpacity(isFocused ? 0.8 : 0.5),
+            width: isFocused ? 3 : 2,
           ),
           boxShadow: isFocused
               ? [
@@ -45,106 +42,105 @@ class CircleWidget extends StatelessWidget {
                 ]
               : [],
         ),
-        child: Container(
-          margin: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.transparent,
-          ),
+        child: ClipOval(
           child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
             children: [
-              // Label do círculo
+              // Label do círculo na parte superior
               Positioned(
-                top: 15,
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  style: TextStyle(
-                    color: isFocused ? Colors.white : Colors.white70,
-                    fontWeight: isFocused ? FontWeight.bold : FontWeight.normal,
-                    fontSize: isFocused ? 16 : 14,
-                  ),
-                  child: Text(circle.label),
-                ),
-              ),
-
-              // Avatares preenchendo o semicírculo
-              ClipPath(
-                clipper: SemicircleClipper(),
-                child: AvatarCluster(
-                  circle: circle,
-                  circleIndex: index,
-                  scale: scale,
-                  isFocused: isFocused,
-                ),
-              ),
-
-              // Indicador de interação quando focado
-              if (isFocused)
-                Positioned(
-                  bottom: 20,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 500),
-                    opacity: isFocused ? 1.0 : 0.0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.touch_app,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Toque para abrir',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                top: size * 0.15,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      circle.label,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isFocused ? 18 : 12,
+                        fontWeight:
+                            isFocused ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ),
                 ),
+              ),
+
+              // Avatares preenchendo a METADE INFERIOR do círculo
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: size * 0.5,
+                child: _buildAvatarGrid(),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-// Clipper para criar um semicírculo (metade superior)
-class SemicircleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(0, size.height / 2);
-    path.arcToPoint(
-      Offset(size.width, size.height / 2),
-      radius: Radius.circular(size.width / 2),
-      clockwise: false,
+  Widget _buildAvatarGrid() {
+    final avatarSize = size * 0.12;
+    final spacing = size * 0.02;
+
+    // Calcular quantos avatares cabem por linha
+    final avatarsPerRow = (size / (avatarSize + spacing)).floor();
+    final rows = (circle.avatarCount / avatarsPerRow).ceil();
+
+    return Padding(
+      padding: EdgeInsets.all(size * 0.08),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: List.generate(rows, (rowIndex) {
+          final startIndex = rowIndex * avatarsPerRow;
+          final endIndex = min(startIndex + avatarsPerRow, circle.avatarCount);
+          final avatarsInRow = endIndex - startIndex;
+
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: spacing / 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(avatarsInRow, (colIndex) {
+                final avatarIndex = startIndex + colIndex;
+
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: spacing / 2),
+                  child: Container(
+                    width: avatarSize,
+                    height: avatarSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 4,
+                        ),
+                      ],
+                      image: DecorationImage(
+                        fit: BoxFit.cover,
+                        image: NetworkImage(
+                          'https://i.pravatar.cc/150?img=$avatarIndex',
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          );
+        }),
+      ),
     );
-    path.lineTo(size.width, size.height / 2);
-    path.lineTo(0, size.height / 2);
-    path.close();
-    return path;
   }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
