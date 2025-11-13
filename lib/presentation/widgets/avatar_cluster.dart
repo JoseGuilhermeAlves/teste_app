@@ -1,12 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:voalis_teste/data/models/circle_model.dart';
+import 'package:voalis_teste/data/models/cluster_model.dart';
 
 class AvatarCluster extends StatelessWidget {
-  final CircleModel circle;
+  final ClusterModel circle;
   final int circleIndex;
   final double scale;
   final bool isFocused;
+  final double circleRadius; // Adicionado parâmetro de raio
 
   const AvatarCluster({
     super.key,
@@ -14,19 +15,20 @@ class AvatarCluster extends StatelessWidget {
     required this.circleIndex,
     required this.scale,
     this.isFocused = false,
+    this.circleRadius = 150, // Valor padrão
   });
 
   @override
   Widget build(BuildContext context) {
     double baseAvatarSize = 45;
     double avatarSize = baseAvatarSize * scale.clamp(0.6, 1.0);
-    int count = circle.avatarCount;
+    int count = circle.memberCount;
 
     // Calcular o layout em grade para preencher o semicírculo
     List<Widget> avatars = [];
 
     // Área disponível do semicírculo (metade superior)
-    double availableRadius = circle.radius - 30; // Margem interna
+    double availableRadius = circleRadius - 30; // Margem interna
 
     // Calcular número de linhas e colunas baseado na quantidade
     int rows = (sqrt(count * 2)).ceil(); // Mais linhas para semicírculo
@@ -53,10 +55,13 @@ class AvatarCluster extends StatelessWidget {
         double xPercent = colsInRow == 1 ? 0.5 : col / (colsInRow - 1);
         double x = -widthAtY / 2 + widthAtY * xPercent;
 
+        // Usar avatares reais dos membros do cluster
+        final member = circle.members[avatarIndex];
+
         avatars.add(
           Positioned(
-            left: circle.radius + x - avatarSize / 2,
-            top: circle.radius - y - avatarSize / 2,
+            left: circleRadius + x - avatarSize / 2,
+            top: circleRadius - y - avatarSize / 2,
             child: AnimatedContainer(
               duration: Duration(milliseconds: 300),
               width: avatarSize,
@@ -68,7 +73,8 @@ class AvatarCluster extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white,
+                      color:
+                          member.isOnline ? Colors.greenAccent : Colors.white,
                       width: isFocused ? 2.5 : 1.5,
                     ),
                     boxShadow: isFocused
@@ -82,9 +88,7 @@ class AvatarCluster extends StatelessWidget {
                         : [],
                     image: DecorationImage(
                       fit: BoxFit.cover,
-                      image: NetworkImage(
-                        'https://i.pravatar.cc/150?img=${circleIndex * 10 + avatarIndex}',
-                      ),
+                      image: NetworkImage(member.avatarUrl),
                     ),
                   ),
                 ),

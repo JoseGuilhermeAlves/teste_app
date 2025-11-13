@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:voalis_teste/core/constants/colors.dart';
-import 'package:voalis_teste/data/models/circle_model.dart';
-import 'package:voalis_teste/presentation/widgets/circle_detail_page.dart';
-import 'package:voalis_teste/presentation/widgets/circle_widget.dart';
+import 'package:voalis_teste/data/models/cluster_model.dart';
+import 'package:voalis_teste/data/repositories/cluster_repository.dart';
+import 'package:voalis_teste/presentation/widgets/cluster_circle_widget.dart';
+import 'package:voalis_teste/presentation/widgets/cluster_detail_page.dart';
 
-class CirclesPage extends StatefulWidget {
-  const CirclesPage({super.key});
+class ConcentricCirclesView extends StatefulWidget {
+  const ConcentricCirclesView({super.key});
 
   @override
-  State<CirclesPage> createState() => _CirclesPageState();
+  State<ConcentricCirclesView> createState() => _ConcentricCirclesViewState();
 }
 
-class _CirclesPageState extends State<CirclesPage>
+class _ConcentricCirclesViewState extends State<ConcentricCirclesView>
     with TickerProviderStateMixin {
   late AnimationController _transitionController;
+  final ClusterRepository _repository = ClusterRepository();
 
-  final List<CircleModel> circles = [
-    CircleModel(label: "Círculo 1", radius: 150, avatarCount: 5),
-    CircleModel(label: "Círculo 2", radius: 150, avatarCount: 8),
-    CircleModel(label: "Círculo 3", radius: 150, avatarCount: 12),
-  ];
-
-  int? selectedCircleIndex;
+  List<ClusterModel> clusters = [];
+  bool isLoading = true;
+  int? selectedClusterIndex;
   int currentFocusedIndex = 0;
   bool _isAnimating = false;
-  int _animationDirection = 1; // 1 = avançar, -1 = voltar
+  int _animationDirection = 1;
 
   @override
   void initState() {
@@ -33,6 +31,15 @@ class _CirclesPageState extends State<CirclesPage>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+    _loadClusters();
+  }
+
+  Future<void> _loadClusters() async {
+    final loadedClusters = await _repository.getAllClusters();
+    setState(() {
+      clusters = loadedClusters;
+      isLoading = false;
+    });
   }
 
   @override
@@ -42,7 +49,7 @@ class _CirclesPageState extends State<CirclesPage>
   }
 
   void _goToNext() {
-    if (_isAnimating || currentFocusedIndex >= circles.length - 1) return;
+    if (_isAnimating || currentFocusedIndex >= clusters.length - 1) return;
 
     setState(() {
       _isAnimating = true;
@@ -77,114 +84,108 @@ class _CirclesPageState extends State<CirclesPage>
 
   @override
   Widget build(BuildContext context) {
-    if (selectedCircleIndex != null) {
-      return CircleDetailPage(
-        circle: circles[selectedCircleIndex!],
-        onBack: () => setState(() => selectedCircleIndex = null),
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: kBackground,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    if (selectedClusterIndex != null) {
+      return ClusterDetailPage(
+        cluster: clusters[selectedClusterIndex!],
+        onBack: () => setState(() => selectedClusterIndex = null),
       );
     }
 
     final screenSize = MediaQuery.of(context).size;
     final focusedCircleSize = screenSize.width * 0.85;
 
-    return GestureDetector(
-      onVerticalDragEnd: (details) {
-        if (details.primaryVelocity! < -500) {
-          _goToNext();
-        } else if (details.primaryVelocity! > 500) {
-          _goToPrevious();
-        }
-      },
-      child: Column(
-        children: [
-          // Botões superiores
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  icon: Icon(Icons.edit, color: kButtonTextColor, size: 20),
-                  label: Text("Edit Circle",
-                      style: TextStyle(color: kButtonTextColor)),
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kButtonBackground,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
+    return Scaffold(
+      backgroundColor: kBackground,
+      body: SafeArea(
+        child: GestureDetector(
+          onVerticalDragEnd: (details) {
+            if (details.primaryVelocity! < -500) {
+              _goToNext();
+            } else if (details.primaryVelocity! > 500) {
+              _goToPrevious();
+            }
+          },
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Concentric Circles',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  icon:
-                      Icon(Icons.add_circle, color: kButtonTextColor, size: 20),
-                  label: Text("Add Circle",
-                      style: TextStyle(color: kButtonTextColor)),
-                  onPressed: () {
-                    setState(() {
-                      circles.add(CircleModel(
-                        label: "Círculo ${circles.length + 1}",
-                        radius: 150,
-                        avatarCount: 5 + circles.length * 2,
-                      ));
-                    });
+              ),
+
+              // Círculos concêntricos
+              Expanded(
+                child: AnimatedBuilder(
+                  animation: _transitionController,
+                  builder: (context, child) {
+                    return Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          ...List.generate(clusters.length, (index) {
+                            return _buildAnimatedCircle(
+                              index,
+                              focusedCircleSize,
+                              _transitionController.value,
+                            );
+                          }),
+                        ],
+                      ),
+                    );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kButtonBackground,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          // Área dos círculos com transição FLUIDA
-          Expanded(
-            child: AnimatedBuilder(
-              animation: _transitionController,
-              builder: (context, child) {
-                return Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      ...List.generate(circles.length, (index) {
-                        return _buildAnimatedCircle(
-                          index,
-                          focusedCircleSize,
-                          _transitionController.value,
-                        );
-                      }),
-                    ],
-                  ),
-                );
-              },
-            ),
+              // Indicador de página
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: clusters.asMap().entries.map((entry) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: currentFocusedIndex == entry.key ? 24.0 : 8.0,
+                      height: 8.0,
+                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: currentFocusedIndex == entry.key
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.3),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
-
-          // Indicador de página
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: circles.asMap().entries.map((entry) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: currentFocusedIndex == entry.key ? 24.0 : 8.0,
-                  height: 8.0,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: currentFocusedIndex == entry.key
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.3),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -193,12 +194,10 @@ class _CirclesPageState extends State<CirclesPage>
     final t = Curves.easeInOutCubic.transform(progress);
     final relation = index - currentFocusedIndex;
 
-    // Posições e tamanhos INICIAIS (antes da animação)
     double startSize;
     double startY;
     double startOpacity;
 
-    // Posições e tamanhos FINAIS (depois da animação)
     double endSize;
     double endY;
     double endOpacity;
@@ -207,9 +206,7 @@ class _CirclesPageState extends State<CirclesPage>
     bool shouldShowContent = true;
 
     if (!_isAnimating) {
-      // Estado estável (sem animação)
       if (relation < 0) {
-        // Círculos que já passaram - pequenos no topo
         final distance = relation.abs();
         startSize = endSize =
             focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
@@ -217,13 +214,11 @@ class _CirclesPageState extends State<CirclesPage>
             endY = -(focusedSize / 2) + (startSize / 2) + 40 + (distance * 15);
         startOpacity = endOpacity = 0.6;
       } else if (relation == 0) {
-        // Círculo focado
         startSize = endSize = focusedSize;
         startY = endY = 0;
         startOpacity = endOpacity = 1.0;
         isFocused = true;
       } else {
-        // TODAS as órbitas externas (1, 2, 3, ...)
         final orbitLevel = relation;
         startSize = endSize = focusedSize * (1.0 + (orbitLevel * 0.4));
         startY = endY = 0;
@@ -231,11 +226,8 @@ class _CirclesPageState extends State<CirclesPage>
         shouldShowContent = false;
       }
     } else {
-      // Durante a animação
       if (_animationDirection == 1) {
-        // AVANÇANDO (para o próximo círculo)
         if (relation == 0) {
-          // Círculo que ESTÁ focado e vai DIMINUIR e SUBIR
           startSize = focusedSize;
           startY = 0;
           startOpacity = 1.0;
@@ -246,7 +238,6 @@ class _CirclesPageState extends State<CirclesPage>
           endOpacity = 0.6;
           isFocused = true;
         } else if (relation == 1) {
-          // Próximo círculo que vai ENCOLHER e vir pro CENTRO
           startSize = focusedSize * 1.4;
           startY = 0;
           startOpacity = 0.5;
@@ -256,7 +247,6 @@ class _CirclesPageState extends State<CirclesPage>
           endOpacity = 1.0;
           shouldShowContent = true;
         } else if (relation > 1) {
-          // Círculos que vão diminuir uma órbita
           final orbitLevel = relation;
           startSize = focusedSize * (1.0 + (orbitLevel * 0.4));
           startY = 0;
@@ -267,7 +257,6 @@ class _CirclesPageState extends State<CirclesPage>
           endOpacity = (0.5 / (orbitLevel - 1)).clamp(0.15, 0.5);
           shouldShowContent = false;
         } else if (relation < 0) {
-          // Círculos pequenos que sobem mais
           final distance = relation.abs();
           startSize =
               focusedSize * (0.22 - ((distance - 1) * 0.03)).clamp(0.15, 0.22);
@@ -285,9 +274,7 @@ class _CirclesPageState extends State<CirclesPage>
           shouldShowContent = false;
         }
       } else {
-        // VOLTANDO (para o círculo anterior)
         if (relation == 0) {
-          // Círculo que ESTÁ focado e vai CRESCER e vir de uma ÓRBITA EXTERNA
           startSize = focusedSize;
           startY = 0;
           startOpacity = 1.0;
@@ -296,9 +283,8 @@ class _CirclesPageState extends State<CirclesPage>
           endY = 0;
           endOpacity = 0.5;
           isFocused = true;
-          shouldShowContent = false; // Vai perder conteúdo ao virar órbita
+          shouldShowContent = false;
         } else if (relation == -1) {
-          // Círculo pequeno no topo que vai CRESCER e vir pro CENTRO
           final smallSize = focusedSize * 0.22;
           startSize = smallSize;
           startY = -(focusedSize / 2) + (smallSize / 2) + 40;
@@ -309,7 +295,6 @@ class _CirclesPageState extends State<CirclesPage>
           endOpacity = 1.0;
           shouldShowContent = true;
         } else if (relation < -1) {
-          // Círculos pequenos que descem
           final distance = relation.abs();
           startSize =
               focusedSize * (0.22 - (distance * 0.03)).clamp(0.15, 0.22);
@@ -322,7 +307,6 @@ class _CirclesPageState extends State<CirclesPage>
               -(focusedSize / 2) + (endSize / 2) + 40 + ((distance - 1) * 15);
           endOpacity = 0.6;
         } else if (relation > 0) {
-          // Órbitas externas que aumentam
           final orbitLevel = relation;
           startSize = focusedSize * (1.0 + ((orbitLevel - 1) * 0.4));
           startY = 0;
@@ -341,7 +325,6 @@ class _CirclesPageState extends State<CirclesPage>
       }
     }
 
-    // Interpolar valores durante a animação
     final currentSize = startSize + ((endSize - startSize) * t);
     final currentY = startY + ((endY - startY) * t);
     final currentOpacity = startOpacity + ((endOpacity - startOpacity) * t);
@@ -355,13 +338,12 @@ class _CirclesPageState extends State<CirclesPage>
       child: Opacity(
         opacity: currentOpacity,
         child: shouldShowContent
-            ? CircleWidget(
-                circle: circles[index],
-                index: index,
+            ? ClusterCircleWidget(
+                cluster: clusters[index],
                 isFocused: isFocused,
                 onTap: () {
                   if (isFocused && !_isAnimating) {
-                    setState(() => selectedCircleIndex = index);
+                    setState(() => selectedClusterIndex = index);
                   }
                 },
                 size: currentSize,
